@@ -2,6 +2,7 @@ import type { EntitySchema } from "../entity-schema/EntitySchema"
 import type { LoggerOptions } from "../logger/LoggerOptions"
 import type { NamingStrategyInterface } from "../naming-strategy/NamingStrategyInterface"
 import type { DatabaseType } from "../driver/types/DatabaseType"
+import type { IsolationLevel } from "../driver/types/IsolationLevel"
 import type { Logger } from "../logger/Logger"
 import type { DataSource } from "../data-source/DataSource"
 import type { QueryResultCache } from "../cache/QueryResultCache"
@@ -29,6 +30,14 @@ export interface BaseDataSourceOptions {
      * Directories support glob patterns.
      */
     readonly subscribers?: MixedList<Function | string>
+
+    /**
+     * Default isolation level for transactions. When set, all transactions started
+     * without an explicit level will use this value. An explicit isolation level
+     * passed to `transaction()` or `startTransaction()` overrides this default.
+     * Must be a level supported by the driver.
+     */
+    readonly isolationLevel?: IsolationLevel
 
     /**
      * Migrations to be loaded for this connection.
@@ -159,11 +168,13 @@ export interface BaseDataSourceOptions {
               /**
                * Type of caching.
                *
-               * - "database" means cached values will be stored in the separate table in database. This is default value.
+               * - "database" means cached values will be stored in the separate table in database. This is the default value.
+               * - "in-memory" means cached values will be stored in application memory using an LRU cache mechanism.
                * - "redis" means cached values will be stored inside redis. You must provide redis connection options.
                */
               readonly type?:
                   | "database"
+                  | "in-memory"
                   | "redis"
                   | "ioredis"
                   | "ioredis/cluster" // todo: add mongodb and other cache providers as well in the future
@@ -180,7 +191,7 @@ export interface BaseDataSourceOptions {
               readonly tableName?: string
 
               /**
-               * Used to provide redis connection options.
+               * Used to provide redis/in-memory cache connection options.
                */
               readonly options?: any
 
